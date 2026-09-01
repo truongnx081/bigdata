@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#123252">
+  <title>Hệ thống phân tích giao thông thời gian thực</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --page: #eef6fb;
+      --surface: #ffffff;
+      --surface-soft: #f5f9fc;
+      --ink: #172333;
+      --muted: #66758a;
+      --line: #d7e3ed;
+      --navy: #123252;
+      --navy-2: #1c7891;
+      --teal: #168b86;
+      --teal-soft: #e8f6f4;
+      --blue-soft: #edf4fb;
+      --amber: #b97916;
+      --amber-soft: #fff5df;
+      --orange: #c85d2b;
+      --orange-soft: #fff0e8;
+      --red: #bf3b43;
+      --red-soft: #fff0f1;
+      --shadow: 0 14px 36px rgba(24, 50, 77, .09);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 10% -8%, rgba(34, 148, 181, .14), transparent 32%),
+        radial-gradient(circle at 90% 8%, rgba(245, 158, 11, .10), transparent 30%),
+        linear-gradient(180deg, #fbfdff 0, var(--page) 48%, #eaf2f8 100%);
+      color: var(--ink);
+      font-family: "Segoe UI", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button { font: inherit; }
+    main { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 40px; }
+
+    .hero {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 270px;
+      gap: 30px;
+      overflow: hidden;
+      padding: 32px;
+      color: #fff;
+      background: linear-gradient(125deg, #123252 0%, #1c496e 62%, #168b86 140%);
+      border-radius: 24px;
+      box-shadow: 0 18px 45px rgba(18, 50, 82, .20);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -90px;
+      top: -130px;
+      width: 330px;
+      height: 330px;
+      border: 1px solid rgba(255,255,255,.13);
+      border-radius: 50%;
+      box-shadow: 0 0 0 42px rgba(255,255,255,.035), 0 0 0 90px rgba(255,255,255,.025);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      color: #b9d7e9;
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before { content: ""; width: 24px; height: 2px; background: #66d0c5; border-radius: 10px; }
+    h1 { max-width: 760px; margin: 13px 0 10px; font-size: clamp(29px, 4vw, 46px); line-height: 1.12; letter-spacing: -.035em; }
+    .hero-copy { max-width: 760px; margin: 0; color: #c8d8e4; font-size: 15px; line-height: 1.7; }
+
+    .flow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 22px;
+    }
+
+    .flow span { padding: 7px 10px; border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.07); border-radius: 8px; color: #e5f1f5; font-size: 11px; }
+    .flow i { color: #7bc7c2; font-style: normal; font-size: 12px; }
+
+    .system-status {
+      position: relative;
+      z-index: 1;
+      align-self: stretch;
+      padding: 20px;
+      background: rgba(7, 28, 47, .42);
+      border: 1px solid rgba(255,255,255,.13);
+      border-radius: 16px;
+      backdrop-filter: blur(10px);
+    }
+
+    .system-status > span { color: #a9c3d4; font-size: 9px; font-weight: 750; letter-spacing: .13em; }
+    .status-line { display: flex; gap: 10px; align-items: center; margin-top: 17px; }
+    .status-line strong { font-size: 18px; }
+    .dot { width: 10px; height: 10px; flex: 0 0 auto; border-radius: 50%; background: #efb24c; box-shadow: 0 0 0 5px rgba(239,178,76,.12); }
+    .dot.on { background: #56d4b4; box-shadow: 0 0 0 5px rgba(86,212,180,.13), 0 0 18px rgba(86,212,180,.35); }
+    .system-status p { margin: 13px 0 0; color: #b8cbd8; font-size: 11px; line-height: 1.55; }
+    .system-status small { display: block; margin-top: 20px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.10); color: #86a7ba; font-size: 9px; }
+
+    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 14px; }
+    .card { background: rgba(255,255,255,.92); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .metric { position: relative; overflow: hidden; min-height: 126px; padding: 20px; }
+    .metric::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--teal); }
+    .metric:nth-child(2)::before { background: #467aa5; }
+    .metric:nth-child(3)::before { background: #7966aa; }
+    .metric:nth-child(4)::before { background: var(--amber); }
+    .metric-label { color: var(--muted); font-size: 11px; font-weight: 650; }
+    .metric strong { display: block; margin: 12px 0 5px; color: var(--navy); font-size: 29px; line-height: 1; font-variant-numeric: tabular-nums; }
+    .metric small { color: #8a97a8; font-size: 10px; }
+
+    .analysis-panel { position: relative; overflow: hidden; margin-top: 14px; padding: 24px; }
+    .analysis-panel::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 5px; background: #93a2b3; }
+    .analysis-panel.smooth::before { background: var(--teal); }
+    .analysis-panel.moderate::before { background: var(--amber); }
+    .analysis-panel.heavy::before { background: var(--orange); }
+    .analysis-panel.critical::before { background: var(--red); }
+
+    .section-head { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; }
+    .section-kicker { margin: 0 0 7px; color: var(--teal); font-size: 10px; font-weight: 750; letter-spacing: .12em; text-transform: uppercase; }
+    .section-head h2, .control-head h2, .data-head h2 { margin: 0; color: var(--navy); font-size: 20px; letter-spacing: -.015em; }
+    .section-description, .control-head p, .data-head p { margin: 7px 0 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
+    .analysis-state { flex: 0 0 auto; padding: 7px 10px; color: #647488; background: var(--surface-soft); border: 1px solid var(--line); border-radius: 999px; font-size: 9px; font-weight: 750; letter-spacing: .06em; }
+    .analysis-panel.smooth .analysis-state { color: #08756e; border-color: #9dd7d2; background: var(--teal-soft); }
+    .analysis-panel.moderate .analysis-state { color: #93620e; border-color: #ebcd91; background: var(--amber-soft); }
+    .analysis-panel.heavy .analysis-state { color: #a94a20; border-color: #efb294; background: var(--orange-soft); }
+    .analysis-panel.critical .analysis-state { color: #a62e36; border-color: #e7a6aa; background: var(--red-soft); }
+
+    .analysis-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 20px; }
+    .summary-item { padding: 15px; background: var(--surface-soft); border: 1px solid #e5ebf1; border-radius: 12px; }
+    .summary-item span { display: block; color: var(--muted); font-size: 10px; }
+    .summary-item strong { display: block; margin-top: 7px; color: var(--navy); font-size: 21px; font-variant-numeric: tabular-nums; }
+
+    .alert-list { display: grid; gap: 8px; margin-top: 13px; }
+    .alert-item { display: flex; justify-content: space-between; gap: 18px; align-items: center; padding: 13px 14px; background: var(--orange-soft); border: 1px solid #f2c4ad; border-radius: 12px; }
+    .alert-item.critical { background: var(--red-soft); border-color: #efb6ba; }
+    .alert-item b { display: block; color: #65321d; font-size: 12px; }
+    .alert-item.critical b { color: #7c242a; }
+    .alert-item span { display: block; margin-top: 4px; color: var(--muted); font-size: 10px; }
+    .risk { margin: 0 !important; color: var(--orange) !important; font-size: 19px !important; font-weight: 800; }
+    .critical .risk { color: var(--red) !important; }
+    .empty, .clear { padding: 14px; color: var(--muted); background: var(--surface-soft); border: 1px dashed #cdd8e2; border-radius: 11px; font-size: 11px; text-align: center; }
+    .clear { color: #116e69; background: var(--teal-soft); border-color: #b8dfdb; border-style: solid; }
+
+    .control-panel { margin-top: 14px; padding: 24px; }
+    .control-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .actions button { min-height: 40px; padding: 9px 14px; color: var(--navy); background: #fff; border: 1px solid #cdd8e2; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 11px; transition: border-color .18s ease, transform .18s ease, box-shadow .18s ease; }
+    .actions button:hover { border-color: #7796ae; box-shadow: 0 6px 16px rgba(18,50,82,.08); transform: translateY(-1px); }
+    .actions .primary { color: #fff; background: var(--navy); border-color: var(--navy); }
+    .actions .stop { color: #9b343a; background: #fff8f8; border-color: #eac4c7; }
+
+    .scenarios { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 20px; }
+    .scenario { position: relative; min-height: 116px; padding: 15px; text-align: left; color: var(--ink); background: var(--surface-soft); border: 1px solid var(--line); border-radius: 13px; cursor: pointer; transition: border-color .18s ease, background .18s ease, transform .18s ease; }
+    .scenario:hover { border-color: #88a5bb; transform: translateY(-1px); }
+    .scenario.active { background: var(--blue-soft); border-color: #5d8bad; box-shadow: inset 0 0 0 1px rgba(93,139,173,.12); }
+    .scenario-number { display: inline-grid; width: 25px; height: 25px; place-items: center; margin-bottom: 12px; color: #527088; background: #fff; border: 1px solid var(--line); border-radius: 7px; font-size: 9px; font-weight: 800; }
+    .scenario.active .scenario-number { color: #fff; background: var(--navy-2); border-color: var(--navy-2); }
+    .scenario b { display: block; color: var(--navy); font-size: 12px; }
+    .scenario span:last-child { display: block; margin-top: 5px; color: var(--muted); font-size: 10px; line-height: 1.45; }
+
+    .data-panel { margin-top: 14px; overflow: hidden; }
+    .data-head { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; padding: 23px 24px 18px; }
+    .updated { flex: 0 0 auto; padding: 7px 10px; color: #587187; background: var(--blue-soft); border-radius: 999px; font-size: 9px; }
+    .table-wrap { overflow: auto; border-top: 1px solid var(--line); }
+    table { width: 100%; border-collapse: collapse; min-width: 850px; }
+    th, td { padding: 13px 15px; text-align: left; border-bottom: 1px solid #e7edf2; font-size: 11px; }
+    th { color: #718095; background: #f8fafc; font-size: 9px; letter-spacing: .07em; text-transform: uppercase; }
+    tbody tr:hover { background: #fbfcfd; }
+    td.num { font-variant-numeric: tabular-nums; }
+    .road-name { color: var(--navy); font-weight: 700; }
+    .level { display: inline-flex; padding: 5px 8px; color: #08756e; background: var(--teal-soft); border-radius: 999px; font-size: 9px; font-weight: 700; }
+    .level.moderate { color: #93620e; background: var(--amber-soft); }
+    .level.heavy { color: #a94a20; background: var(--orange-soft); }
+    .level.critical { color: #a62e36; background: var(--red-soft); }
+    .notice { min-height: 18px; margin: 0; padding: 11px 24px; color: var(--muted); background: #fbfcfd; font-size: 10px; }
+    .notice.error { color: var(--red); background: var(--red-soft); }
+
+    footer { display: flex; justify-content: space-between; gap: 16px; padding: 22px 4px 0; color: #7b8998; font-size: 9px; }
+
+    @media (max-width: 880px) {
+      .hero { grid-template-columns: 1fr; }
+      .system-status { max-width: 420px; }
+      .metrics, .analysis-summary { grid-template-columns: repeat(2, 1fr); }
+      .scenarios { grid-template-columns: repeat(2, 1fr); }
+      .control-head { flex-direction: column; }
+    }
+
+    @media (max-width: 560px) {
+      main { width: min(100% - 20px, 1180px); padding-top: 10px; }
+      .hero { padding: 24px 20px; border-radius: 18px; }
+      h1 { font-size: 29px; }
+      .flow i { display: none; }
+      .metrics { gap: 8px; }
+      .metric { min-height: 112px; padding: 16px; }
+      .metric strong { font-size: 24px; }
+      .analysis-panel, .control-panel { padding: 20px; }
+      .section-head, .data-head { flex-direction: column; }
+      .analysis-state, .updated { align-self: flex-start; }
+      .scenarios { grid-template-columns: 1fr; }
+      .scenario { min-height: 100px; }
+      footer { flex-direction: column; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header class="hero">
+    <div>
+      <div class="eyebrow">LiveRoad</div>
+      <h1>Bảng theo dõi giao thông từ cảm biến</h1>
+      <p class="hero-copy">Theo dõi sáu tuyến đường, cập nhật tốc độ, mật độ và cảnh báo ùn tắc theo thời gian thực.</p>
+      <div class="flow" aria-label="Luồng xử lý dữ liệu">
+        <span>Nguồn cảm biến</span><i>→</i><span>Gửi dữ liệu liên tục</span><i>→</i><span>Phân tích tự động</span><i>→</i><span>Cảnh báo trực quan</span>
+      </div>
+    </div>
+    <aside class="system-status" aria-label="Trạng thái hệ thống">
+      <span>TRẠNG THÁI THEO DÕI</span>
+      <div class="status-line"><i id="dot" class="dot"></i><strong id="active">Đang kiểm tra</strong></div>
+      <p id="kafka">Đang kết nối luồng dữ liệu</p>
+      <small>CẬP NHẬT: <span id="last-update">CHƯA CÓ DỮ LIỆU</span></small>
+    </aside>
+  </header>
+
+  <section class="metrics" aria-label="Chỉ số vận hành">
+    <article class="card metric"><span class="metric-label">Dữ liệu đã nhận</span><strong id="events">0</strong><small>lượt cập nhật</small></article>
+    <article class="card metric"><span class="metric-label">Nhịp cập nhật</span><strong id="rate">0</strong><small>lượt mỗi giây</small></article>
+    <article class="card metric"><span class="metric-label">Lượt phân tích</span><strong id="cycles">0</strong><small>đã hoàn thành</small></article>
+    <article class="card metric"><span class="metric-label">Tình huống hiện tại</span><strong id="scenario">—</strong><small id="temporary">Chạy liên tục</small></article>
+  </section>
+
+  <section id="analysis-panel" class="card analysis-panel waiting">
+    <div class="section-head">
+      <div><p class="section-kicker">Cảnh báo ùn tắc</p><h2 id="analysis-title">Đang chờ dữ liệu xử lý</h2><p id="analysis-description" class="section-description">Hệ thống đang chuẩn bị lượt phân tích đầu tiên.</p></div>
+      <span id="analysis-state" class="analysis-state">ĐANG KHỞI TẠO</span>
+    </div>
+    <div class="analysis-summary">
+      <div class="summary-item"><span>Tốc độ trung bình</span><strong><span id="analysis-speed">—</span> km/h</strong></div>
+      <div class="summary-item"><span>Mật độ giao thông</span><strong><span id="analysis-density">—</span>%</strong></div>
+      <div class="summary-item"><span>Số phương tiện</span><strong id="analysis-vehicles">—</strong></div>
+      <div class="summary-item"><span>Điểm rủi ro</span><strong><span id="analysis-risk">—</span>%</strong></div>
+    </div>
+    <div id="alert-list" class="alert-list"><div class="empty">Chưa có kết quả phân tích.</div></div>
+  </section>
+
+  <section class="card control-panel">
+    <div class="control-head">
+      <div><p class="section-kicker">Tùy chọn theo dõi</p><h2>Chọn tình huống giao thông</h2><p>Thay đổi điều kiện để quan sát tốc độ, mật độ và cảnh báo theo thời gian thực.</p></div>
+      <div class="actions"><button id="start" class="primary" type="button">Bắt đầu theo dõi</button><button id="stop" class="stop" type="button">Tạm dừng</button></div>
+    </div>
+    <div class="scenarios">
+      <button class="scenario" data-scenario="normal" type="button"><span class="scenario-number">01</span><b>Bình thường</b><span>Tốc độ ổn định, mật độ thấp.</span></button>
+      <button class="scenario" data-scenario="rush_hour" type="button"><span class="scenario-number">02</span><b>Giờ cao điểm</b><span>Mật độ tăng trên toàn bộ sáu tuyến.</span></button>
+      <button class="scenario" data-scenario="rain" type="button"><span class="scenario-number">03</span><b>Trời mưa</b><span>Tốc độ giảm, độ chiếm dụng tăng.</span></button>
+      <button class="scenario" data-scenario="incident" type="button"><span class="scenario-number">04</span><b>Sự cố 30 giây</b><span>Một tuyến giảm tốc mạnh và phát cảnh báo.</span></button>
+    </div>
+  </section>
+
+  <section class="card data-panel">
+    <div class="data-head">
+      <div><p class="section-kicker">Chi tiết tuyến đường</p><h2>Tình trạng theo từng tuyến đường</h2><p>Cập nhật tốc độ, mật độ, số phương tiện và mức cảnh báo của từng tuyến.</p></div>
+      <span class="updated">TỰ ĐỘNG CẬP NHẬT</span>
+    </div>
+    <div id="table" class="table-wrap"><div class="empty" style="margin:18px">Đang chờ lượt cập nhật đầu tiên…</div></div>
+    <p id="message" class="notice"></p>
+  </section>
+
+  <footer><span>LiveRoad — Bảng theo dõi giao thông</span><span>Tốc độ · Mật độ · Cảnh báo ùn tắc</span></footer>
+</main>
+
+<script>
+  const labels={normal:"Bình thường",rush_hour:"Giờ cao điểm",rain:"Trời mưa",incident:"Sự cố"};
+  const levelLabels={smooth:"Thông thoáng",moderate:"Đông xe",heavy:"Ùn tắc",critical:"Ùn tắc nghiêm trọng"};
+  const fmt=(value,digits=1)=>Number(value||0).toLocaleString("vi-VN",{maximumFractionDigits:digits});
+  const esc=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
+  const timeText=value=>value?new Date(value).toLocaleTimeString("vi-VN",{hour:"2-digit",minute:"2-digit",second:"2-digit"}):"CHƯA CÓ DỮ LIỆU";
+
+  async function command(body){
+    const message=document.querySelector("#message");
+    try{
+      const response=await fetch("/api/control",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+      if(!response.ok)throw new Error((await response.json()).detail||"Không gửi được yêu cầu");
+      message.textContent="Đã cập nhật trạng thái theo dõi.";
+      message.className="notice";
+      await refresh();
+    }catch(error){
+      message.textContent=error.message;
+      message.className="notice error";
+    }
+  }
+
+  function renderAnalysis(analysis){
+    const panel=document.querySelector("#analysis-panel"),summary=analysis?.summary,alerts=analysis?.alerts||[];
+    panel.className=`card analysis-panel ${summary?.level||analysis?.status||"waiting"}`;
+    if(analysis?.status==="stopped"){
+      document.querySelector("#analysis-title").textContent="Luồng dữ liệu đang tạm dừng";
+      document.querySelector("#analysis-description").textContent="Kết quả sẽ cập nhật lại khi tiếp tục theo dõi.";
+      document.querySelector("#analysis-state").textContent="ĐÃ TẠM DỪNG";
+    }else if(analysis?.status!=="ready"){
+      document.querySelector("#analysis-title").textContent="Đang chờ dữ liệu xử lý";
+      document.querySelector("#analysis-description").textContent="Hệ thống đang chuẩn bị lượt phân tích đầu tiên.";
+      document.querySelector("#analysis-state").textContent="ĐANG KHỞI TẠO";
+    }else{
+      document.querySelector("#analysis-title").textContent=alerts.length?`${alerts.length} cảnh báo cần chú ý`:"Giao thông đang trong mức ổn định";
+      document.querySelector("#analysis-description").textContent=summary.prediction_label||levelLabels[summary.level];
+      document.querySelector("#analysis-state").textContent="ĐÃ CẬP NHẬT";
+    }
+    document.querySelector("#analysis-speed").textContent=summary?fmt(summary.avg_speed_kmh):"—";
+    document.querySelector("#analysis-density").textContent=summary?fmt(summary.avg_density_pct):"—";
+    document.querySelector("#analysis-vehicles").textContent=summary?fmt(summary.vehicle_count):"—";
+    document.querySelector("#analysis-risk").textContent=summary?fmt(summary.risk_score):"—";
+    document.querySelector("#alert-list").innerHTML=analysis?.status!=="ready"
+      ?`<div class="empty">${analysis?.status==="stopped"?"Hãy bắt đầu theo dõi để tiếp tục.":"Chờ lượt phân tích đầu tiên…"}</div>`
+      :alerts.length
+        ?alerts.map(item=>`<div class="alert-item ${esc(item.congestion_level)}"><div><b>${esc(item.road_name)} · ${esc(item.alert_title||levelLabels[item.congestion_level])}</b><span>${fmt(item.speed_kmh)} km/h · mật độ ${fmt(item.density_pct)}% · ${fmt(item.vehicle_count)} phương tiện</span></div><span class="risk">${fmt(item.risk_score)}%</span></div>`).join("")
+        :`<div class="clear">Các tuyến đường hiện chưa đạt ngưỡng cảnh báo ùn tắc.</div>`;
+  }
+
+  function render(data){
+    document.querySelector("#active").textContent=data.active?"Đang hoạt động":"Đã tạm dừng";
+    document.querySelector("#dot").classList.toggle("on",data.active&&data.kafka_connected);
+    document.querySelector("#kafka").textContent=data.kafka_connected?"Dữ liệu đã kết nối và sẵn sàng.":"Đang kết nối nguồn dữ liệu.";
+    document.querySelector("#last-update").textContent=timeText(data.last_publish_at).toUpperCase();
+    document.querySelector("#events").textContent=fmt(data.total_events,0);
+    document.querySelector("#rate").textContent=data.active?fmt(data.events_per_cycle/data.interval_seconds):"0";
+    document.querySelector("#cycles").textContent=fmt(data.cycles,0);
+    document.querySelector("#scenario").textContent=labels[data.scenario]||data.scenario;
+    document.querySelector("#temporary").textContent=data.temporary_seconds?`Còn ${data.temporary_seconds} giây`:"Chạy liên tục";
+    document.querySelectorAll("[data-scenario]").forEach(button=>button.classList.toggle("active",button.dataset.scenario===data.scenario));
+    renderAnalysis(data.analysis||{});
+
+    const processedRoads=new Map((data.analysis?.roads||[]).map(item=>[item.road_id,item])),rows=data.roads||[];
+    document.querySelector("#table").innerHTML=rows.length
+      ?`<table><thead><tr><th>Tuyến đường</th><th>Tọa độ</th><th>Tốc độ</th><th>Mật độ</th><th>Phương tiện</th><th>Trạng thái</th><th>Rủi ro</th></tr></thead><tbody>${rows.map(row=>{const result=processedRoads.get(row.road_id),level=result?.congestion_level;return `<tr><td><span class="road-name">${esc(row.road_name)}</span></td><td>${fmt(row.latitude,4)}, ${fmt(row.longitude,4)}</td><td class="num">${fmt(result?.speed_kmh??row.speed_kmh)} km/h</td><td class="num">${fmt(result?.density_pct??row.density_pct)}%</td><td class="num">${fmt(result?.vehicle_count??row.vehicle_count,0)}</td><td>${result?`<span class="level ${esc(level)}">${esc(levelLabels[level]||level)}</span>`:"Đang xử lý"}</td><td class="num">${result?`${fmt(result.risk_score)}%`:"—"}</td></tr>`}).join("")}</tbody></table>`
+      :`<div class="empty" style="margin:18px">${data.active?"Đang chờ lượt cập nhật đầu tiên…":"Nguồn dữ liệu đang tạm dừng."}</div>`;
+    if(data.last_error){
+      const message=document.querySelector("#message");
+      message.textContent=data.last_error;
+      message.className="notice error";
+    }
+  }
+
+  async function refresh(){
+    try{
+      const response=await fetch("/api/status");
+      if(!response.ok)throw new Error("Mất kết nối");
+      render(await response.json());
+    }catch(_){
+      document.querySelector("#active").textContent="Mất kết nối";
+      document.querySelector("#kafka").textContent="Không thể nhận dữ liệu từ hệ thống.";
+    }
+  }
+
+  document.querySelector("#start").onclick=()=>command({action:"start"});
+  document.querySelector("#stop").onclick=()=>command({action:"stop"});
+  document.querySelectorAll("[data-scenario]").forEach(button=>button.onclick=()=>command({action:"set_scenario",scenario:button.dataset.scenario,...(button.dataset.scenario==="incident"?{duration_seconds:30}:{})}));
+  refresh();
+  setInterval(refresh,1200);
+</script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+scenario,road_id,road_name,latitude,longitude,speed_kmh,density_pct,vehicle_count,occupancy_pct,expected_state
+normal,rd-nguyen-hue,Nguyễn Huệ,10.7732,106.7035,45.0,33,24,28,smooth
+normal,rd-le-loi,Lê Lợi,10.7723,106.7001,39.6,33,27,28,smooth
+normal,rd-dien-bien-phu,Điện Biên Phủ,10.7964,106.7068,41.4,33,32,28,smooth
+normal,rd-cmt8,Cách Mạng Tháng 8,10.7828,106.6819,36.9,33,29,28,moderate
+normal,rd-vo-van-kiet,Võ Văn Kiệt,10.7510,106.6822,53.1,33,36,28,smooth
+normal,rd-hai-ba-trung,Hai Bà Trưng,10.7874,106.6967,38.7,33,26,28,smooth
+rush_hour,rd-nguyen-hue,Nguyễn Huệ,10.7732,106.7035,24.9,68,50,58,heavy
+rush_hour,rd-le-loi,Lê Lợi,10.7723,106.7001,21.6,68,56,58,heavy
+rush_hour,rd-dien-bien-phu,Điện Biên Phủ,10.7964,106.7068,22.7,68,65,58,heavy
+rush_hour,rd-cmt8,Cách Mạng Tháng 8,10.7828,106.6819,19.9,68,60,58,heavy
+rush_hour,rd-vo-van-kiet,Võ Văn Kiệt,10.7510,106.6822,29.8,68,75,58,moderate
+rush_hour,rd-hai-ba-trung,Hai Bà Trưng,10.7874,106.6967,21.0,68,54,58,heavy
+rain,rd-nguyen-hue,Nguyễn Huệ,10.7732,106.7035,32.2,57,42,49,moderate
+rain,rd-le-loi,Lê Lợi,10.7723,106.7001,28.1,57,47,49,moderate
+rain,rd-dien-bien-phu,Điện Biên Phủ,10.7964,106.7068,29.5,57,55,49,moderate
+rain,rd-cmt8,Cách Mạng Tháng 8,10.7828,106.6819,26.1,57,50,49,moderate
+rain,rd-vo-van-kiet,Võ Văn Kiệt,10.7510,106.6822,38.3,57,63,49,moderate
+rain,rd-hai-ba-trung,Hai Bà Trưng,10.7874,106.6967,27.5,57,45,49,moderate
+incident,rd-nguyen-hue,Nguyễn Huệ,10.7732,106.7035,45.0,33,24,28,smooth
+incident,rd-le-loi,Lê Lợi,10.7723,106.7001,39.6,33,27,28,smooth
+incident,rd-dien-bien-phu,Điện Biên Phủ,10.7964,106.7068,5.6,91,87,82,critical
+incident,rd-cmt8,Cách Mạng Tháng 8,10.7828,106.6819,36.9,33,29,28,moderate
+incident,rd-vo-van-kiet,Võ Văn Kiệt,10.7510,106.6822,53.1,33,36,28,smooth
+incident,rd-hai-ba-trung,Hai Bà Trưng,10.7874,106.6967,38.7,33,26,28,smooth

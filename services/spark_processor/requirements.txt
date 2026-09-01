@@ -1,0 +1,3 @@
+pyspark==3.5.8
+synapseml==1.1.3
+numpy>=1.26,<2

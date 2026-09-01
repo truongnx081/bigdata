@@ -1,0 +1,83 @@
+{
+  "dataset": "iot_traffic_demo",
+  "version": 1,
+  "event_interval_seconds": 1.0,
+  "incident_duration_seconds": 30,
+  "random_seed": 2026,
+  "roads": [
+    {
+      "road_id": "rd-nguyen-hue",
+      "road_name": "Nguyễn Huệ",
+      "latitude": 10.7732,
+      "longitude": 106.7035,
+      "free_speed_kmh": 52,
+      "capacity": 74
+    },
+    {
+      "road_id": "rd-le-loi",
+      "road_name": "Lê Lợi",
+      "latitude": 10.7723,
+      "longitude": 106.7001,
+      "free_speed_kmh": 46,
+      "capacity": 82
+    },
+    {
+      "road_id": "rd-dien-bien-phu",
+      "road_name": "Điện Biên Phủ",
+      "latitude": 10.7964,
+      "longitude": 106.7068,
+      "free_speed_kmh": 48,
+      "capacity": 96
+    },
+    {
+      "road_id": "rd-cmt8",
+      "road_name": "Cách Mạng Tháng 8",
+      "latitude": 10.7828,
+      "longitude": 106.6819,
+      "free_speed_kmh": 43,
+      "capacity": 88
+    },
+    {
+      "road_id": "rd-vo-van-kiet",
+      "road_name": "Võ Văn Kiệt",
+      "latitude": 10.751,
+      "longitude": 106.6822,
+      "free_speed_kmh": 61,
+      "capacity": 110
+    },
+    {
+      "road_id": "rd-hai-ba-trung",
+      "road_name": "Hai Bà Trưng",
+      "latitude": 10.7874,
+      "longitude": 106.6967,
+      "free_speed_kmh": 45,
+      "capacity": 79
+    }
+  ],
+  "scenarios": {
+    "normal": {
+      "label": "Bình thường",
+      "description": "Tốc độ ổn định, mật độ thấp.",
+      "speed_factor": 0.9,
+      "density_factor": 0.33
+    },
+    "rush_hour": {
+      "label": "Giờ cao điểm",
+      "description": "Mật độ tăng và tốc độ giảm trên toàn bộ sáu tuyến.",
+      "speed_factor": 0.55,
+      "density_factor": 0.68
+    },
+    "rain": {
+      "label": "Trời mưa",
+      "description": "Tốc độ giảm, mật độ và tỷ lệ chiếm dụng tăng.",
+      "speed_factor": 0.68,
+      "density_factor": 0.57
+    },
+    "incident": {
+      "label": "Sự cố",
+      "description": "Một tuyến ngẫu nhiên bị giảm tốc mạnh trong 30 giây; các tuyến khác hoạt động gần mức bình thường.",
+      "speed_factor": 0.22,
+      "density_factor": 0.91
+    }
+  }
+}

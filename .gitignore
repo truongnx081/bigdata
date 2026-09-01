@@ -1,0 +1,34 @@
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# Local runtime/cache
+.spark-checkpoint/
+.venv-video/
+.codex_tmp/
+.openai/
+.docx-traffic-work/
+.v2-work/
+
+# Node / Vinext / Cloudflare build output
+node_modules/
+.next/
+.vinext/
+.wrangler/
+dist/
+
+# Logs
+*.log
+coverage/
+.coverage
+
+# Office temporary files
+~$*
+
+# Report build artifacts
+v1_body_items.json
+v1_page_map.json

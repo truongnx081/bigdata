@@ -1,0 +1,2 @@
+-r services/video_producer/requirements.txt
+pytest>=8.3,<9
